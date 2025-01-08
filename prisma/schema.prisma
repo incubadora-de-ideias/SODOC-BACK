@@ -85,9 +85,9 @@ model UsuariosGrupo {
 model Usuario {
   id                 String            @id @default(uuid())
   nome               String
-  telefone           String?
-  email              String?
-  n_bi               String?
+  telefone           String
+  email              String            @unique
+  n_bi               String            @unique
   password           String
   id_tipo_usuario    String
   versoes_documentos VersaoDocumento[]
@@ -97,15 +97,25 @@ model Usuario {
 }
 
 enum TipoNotificacao {
-  INTERNA
-  EXTERNA
+  ALERTA
+  PENDENTE
+  SUCESSO
+  MENSAGEM
+}
+
+enum DestinoNotificacao {
+  INTERNO
+  EXTERNO
 }
 
 model Notificacao {
-  id         String          @id @default(uuid())
+  id         String             @id @default(uuid())
   id_usuario String
   titulo     String
   descricao  String
-  tipo       TipoNotificacao @default(INTERNA)
-  usuario    Usuario         @relation(fields: [id_usuario], references: [id])
+  data       DateTime           @default(now())
+  lida       Boolean            @default(false)
+  tipo       TipoNotificacao    @default(MENSAGEM)
+  destino    DestinoNotificacao @default(INTERNO)
+  usuario    Usuario            @relation(fields: [id_usuario], references: [id])
 }
