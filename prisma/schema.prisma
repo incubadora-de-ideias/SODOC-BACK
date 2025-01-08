@@ -13,137 +13,99 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model Usuario {
-  id               String            @id @default(uuid())
-  nome             String
-  telefone         String?
-  email            String?
-  n_bi             String?
-  password         String
-  id_tipo_usuario  String
-  grupo_usuario    GrupoUsuario[]
-  documento        Documento[]
-  versao_documento VersaoDocumento[]
-  tipo_usuario     TipoUsuario       @relation(fields: [id_tipo_usuario], references: [id])
-  permissao        Permissao[]
-  workflow         Workflow[]
-  usuario_etapa    UsuarioEtapa[]
-  auditoria        Auditoria[]
-  notificacao      Notificacao[]
-}
-
-model TipoUsuario {
-  id      String    @id @default(uuid())
-  tipo    String
-  usuario Usuario[]
-}
-
-model Grupo {
-  id            String         @id @default(uuid())
-  nome          String
-  descricao     String?
-  grupo_usuario GrupoUsuario[]
-  permissao     Permissao[]
-}
-
-model GrupoUsuario {
-  id         String  @id @default(uuid())
-  id_usuario String
-  id_grupo   String
-  grupo      Grupo   @relation(fields: [id_grupo], references: [id])
-  usuario    Usuario @relation(fields: [id_usuario], references: [id])
+enum Permissao {
+  EDITAR
+  VER
 }
 
 model Documento {
-  id               String            @id @default(uuid())
-  nome             String
-  descricao        String?
-  caminho          String
-  id_usuario       String
-  usuario          Usuario           @relation(fields: [id_usuario], references: [id])
-  versao_documento VersaoDocumento[]
-  permissao        Permissao[]
-  auditoria        Auditoria[]
+  id                 String              @id @default(uuid())
+  nome               String
+  descricao          String?
+  caminho            String
+  versoes_documentos VersaoDocumento[]
+  acessos            AcessoDocumento[]
+  tarefas_documentos TarefasDocumentos[]
+}
+
+model Tarefa {
+  id                 String              @id @default(uuid())
+  nome               String
+  descricao          String?
+  id_usuario         String
+  tarefas_documentos TarefasDocumentos[]
+}
+
+model TarefasDocumentos {
+  id           String @id @default(uuid())
+  id_tarefa    String
+  id_documento String
+
+  tarefa    Tarefa    @relation(fields: [id_tarefa], references: [id])
+  documento Documento @relation(fields: [id_documento], references: [id])
 }
 
 model VersaoDocumento {
-  id           String      @id @default(uuid())
+  id           String    @id @default(uuid())
   id_documento String
   id_usuario   String
+  descricao    String
   caminho      String
-  n_versao     Int
-  usuario      Usuario     @relation(fields: [id_usuario], references: [id])
-  documento    Documento   @relation(fields: [id_documento], references: [id])
-  auditoria    Auditoria[]
+  data_criacao DateTime  @default(now())
+  documento    Documento @relation(fields: [id_documento], references: [id])
+  usuario      Usuario   @relation(fields: [id_usuario], references: [id])
 }
 
-model Permissao {
-  id                String  @id @default(uuid())
-  id_documento      String
-  id_grupo          String?
-  id_usuario        String?
-  id_tipo_permissao String
+model AcessoDocumento {
+  id           String    @id @default(uuid())
+  id_usuario   String
+  id_documento String
+  permissao    Permissao @default(VER)
 
-  documento      Documento     @relation(fields: [id_documento], references: [id])
-  grupo          Grupo?        @relation(fields: [id_grupo], references: [id])
-  usuario        Usuario?      @relation(fields: [id_usuario], references: [id])
-  tipo_permissao TipoPermissao @relation(fields: [id_tipo_permissao], references: [id])
+  usuario   Usuario   @relation(fields: [id_usuario], references: [id])
+  documento Documento @relation(fields: [id_documento], references: [id])
 }
 
-// Tipo de permissão
-// 1 - Visualizar
-// 2 - Editar
-model TipoPermissao {
-  id        String      @id @default(uuid())
-  tipo      String
-  permissao Permissao[]
+model Grupo {
+  id             String          @id @default(uuid())
+  nome           String
+  usuarios_grupo UsuariosGrupo[]
 }
 
-model Workflow {
-  id         String  @id @default(uuid())
-  nome       String
-  descricao  String?
-  id_usuario String
-  usuario    Usuario @relation(fields: [id_usuario], references: [id])
-  etapa      Etapa[]
+model UsuariosGrupo {
+  id        String  @id @default(uuid())
+  id_usario String
+  id_grupo  String
+  usuario   Usuario @relation(fields: [id_usario], references: [id])
+  grupo     Grupo   @relation(fields: [id_grupo], references: [id])
+
+  @@unique([id_grupo, id_usario])
 }
 
-model Etapa {
-  id                     String         @id @default(uuid())
-  nome                   String
-  descricao              String?
-  id_workflow            String
-  estado                 String
-  id_usuario_responsavel String
-  workflow               Workflow       @relation(fields: [id_workflow], references: [id])
-  usuario_etapa          UsuarioEtapa[]
-  auditoria              Auditoria[]
+model Usuario {
+  id                 String            @id @default(uuid())
+  nome               String
+  telefone           String?
+  email              String?
+  n_bi               String?
+  password           String
+  id_tipo_usuario    String
+  versoes_documentos VersaoDocumento[]
+  usuario_grupos     UsuariosGrupo[]
+  acesso_documentos  AcessoDocumento[]
+  notificacoes       Notificacao[]
 }
 
-model UsuarioEtapa {
-  id         String  @id @default(uuid())
-  id_usuario String
-  id_etapa   String
-  usuario    Usuario @relation(fields: [id_usuario], references: [id])
-  etapa      Etapa   @relation(fields: [id_etapa], references: [id])
-}
-
-model Auditoria {
-  id                  String          @id @default(uuid())
-  id_usuario          String
-  id_etapa            String
-  id_documento        String
-  id_versao_documento String
-  usuario             Usuario         @relation(fields: [id_usuario], references: [id])
-  etapa               Etapa           @relation(fields: [id_etapa], references: [id])
-  documento           Documento       @relation(fields: [id_documento], references: [id])
-  versao_documento    VersaoDocumento @relation(fields: [id_versao_documento], references: [id])
+enum TipoNotificacao {
+  INTERNA
+  EXTERNA
 }
 
 model Notificacao {
-  id         String @id @default(uuid())
+  id         String          @id @default(uuid())
   id_usuario String
-  mensagem   String
-
-  usuario Usuario @relation(fields: [id_usuario], references: [id])
+  titulo     String
+  descricao  String
+  tipo       TipoNotificacao @default(INTERNA)
+  usuario    Usuario         @relation(fields: [id_usuario], references: [id])
 }
