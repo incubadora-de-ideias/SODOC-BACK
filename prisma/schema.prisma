@@ -89,7 +89,6 @@ model Usuario {
   email              String            @unique
   n_bi               String            @unique
   password           String
-  id_tipo_usuario    String
   versoes_documentos VersaoDocumento[]
   usuario_grupos     UsuariosGrupo[]
   acesso_documentos  AcessoDocumento[]

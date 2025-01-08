@@ -1,4 +1,8 @@
 import fastify from 'fastify';
+import routes from "./routes"
+import jwt from '@fastify/jwt';
+import fastifyCookie from '@fastify/cookie';
+import cors from '@fastify/cors';
 import routes from "./routes";
 import multipart  from '@fastify/multipart';
 
@@ -12,6 +16,26 @@ app.get('/', async (request, reply) => {
 
 const start = async () => {
   try {
+    app.register(jwt, {
+      secret: process.env.JWT_SECRET!,
+      sign: {
+        expiresIn: process.env.JWT_EXPIRES_IN!,
+      },
+    });
+    app.addHook("preHandler", (req, res, next) => {
+      req.jwt = app.jwt;
+      return next();
+    });
+
+    app.register(fastifyCookie, {
+      secret: process.env.COOKIE_SECRET!,
+      hook: "preHandler",
+    });
+
+    await app.register(cors, {
+      origin: process.env.CROSS_ORIGIN,
+      credentials: true,
+    });
     await app.register(multipart, {
       limits: {
         fieldNameSize: 1024 * 1024,
