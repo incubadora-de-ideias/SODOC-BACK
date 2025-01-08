@@ -1,3 +1,9 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
 generator client {
   provider = "prisma-client-js"
 }
@@ -7,161 +13,137 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model auditoria {
-  id                  String          @id
-  id_usuario          String
-  id_etapa            String
-  id_documento        String
-  id_versao_documento String
-  documento           documento       @relation(fields: [id_documento], references: [id], map: "Auditoria_id_documento_fkey")
-  etapa               etapa           @relation(fields: [id_etapa], references: [id], map: "Auditoria_id_etapa_fkey")
-  usuario             usuario         @relation(fields: [id_usuario], references: [id], map: "Auditoria_id_usuario_fkey")
-  versaodocumento     versaodocumento @relation(fields: [id_versao_documento], references: [id], map: "Auditoria_id_versao_documento_fkey")
-
-  @@index([id_documento], map: "Auditoria_id_documento_fkey")
-  @@index([id_etapa], map: "Auditoria_id_etapa_fkey")
-  @@index([id_usuario], map: "Auditoria_id_usuario_fkey")
-  @@index([id_versao_documento], map: "Auditoria_id_versao_documento_fkey")
+model Usuario {
+  id               String            @id @default(uuid())
+  nome             String
+  telefone         String?
+  email            String?
+  n_bi             String?
+  password         String
+  id_tipo_usuario  String
+  grupo_usuario    GrupoUsuario[]
+  documento        Documento[]
+  versao_documento VersaoDocumento[]
+  tipo_usuario     TipoUsuario       @relation(fields: [id_tipo_usuario], references: [id])
+  permissao        Permissao[]
+  workflow         Workflow[]
+  usuario_etapa    UsuarioEtapa[]
+  auditoria        Auditoria[]
+  notificacao      Notificacao[]
 }
 
-model documento {
-  id              String            @id
-  nome            String
-  descricao       String?
-  caminho         String
-  id_usuario      String
-  auditoria       auditoria[]
-  usuario         usuario           @relation(fields: [id_usuario], references: [id], map: "Documento_id_usuario_fkey")
-  permissao       permissao[]
-  versaodocumento versaodocumento[]
-
-  @@index([id_usuario], map: "Documento_id_usuario_fkey")
+model TipoUsuario {
+  id      String    @id @default(uuid())
+  tipo    String
+  usuario Usuario[]
 }
 
-model etapa {
-  id                     String         @id
+model Grupo {
+  id            String         @id @default(uuid())
+  nome          String
+  descricao     String?
+  grupo_usuario GrupoUsuario[]
+  permissao     Permissao[]
+}
+
+model GrupoUsuario {
+  id         String  @id @default(uuid())
+  id_usuario String
+  id_grupo   String
+  grupo      Grupo   @relation(fields: [id_grupo], references: [id])
+  usuario    Usuario @relation(fields: [id_usuario], references: [id])
+}
+
+model Documento {
+  id               String            @id @default(uuid())
+  nome             String
+  descricao        String?
+  caminho          String
+  id_usuario       String
+  usuario          Usuario           @relation(fields: [id_usuario], references: [id])
+  versao_documento VersaoDocumento[]
+  permissao        Permissao[]
+  auditoria        Auditoria[]
+}
+
+model VersaoDocumento {
+  id           String      @id @default(uuid())
+  id_documento String
+  id_usuario   String
+  caminho      String
+  n_versao     Int
+  usuario      Usuario     @relation(fields: [id_usuario], references: [id])
+  documento    Documento   @relation(fields: [id_documento], references: [id])
+  auditoria    Auditoria[]
+}
+
+model Permissao {
+  id                String  @id @default(uuid())
+  id_documento      String
+  id_grupo          String?
+  id_usuario        String?
+  id_tipo_permissao String
+
+  documento      Documento     @relation(fields: [id_documento], references: [id])
+  grupo          Grupo?        @relation(fields: [id_grupo], references: [id])
+  usuario        Usuario?      @relation(fields: [id_usuario], references: [id])
+  tipo_permissao TipoPermissao @relation(fields: [id_tipo_permissao], references: [id])
+}
+
+// Tipo de permissão
+// 1 - Visualizar
+// 2 - Editar
+model TipoPermissao {
+  id        String      @id @default(uuid())
+  tipo      String
+  permissao Permissao[]
+}
+
+model Workflow {
+  id         String  @id @default(uuid())
+  nome       String
+  descricao  String?
+  id_usuario String
+  usuario    Usuario @relation(fields: [id_usuario], references: [id])
+  etapa      Etapa[]
+}
+
+model Etapa {
+  id                     String         @id @default(uuid())
   nome                   String
   descricao              String?
   id_workflow            String
   estado                 String
   id_usuario_responsavel String
-  auditoria              auditoria[]
-  workflow               workflow       @relation(fields: [id_workflow], references: [id], map: "Etapa_id_workflow_fkey")
-  usuarioetapa           usuarioetapa[]
-
-  @@index([id_workflow], map: "Etapa_id_workflow_fkey")
+  workflow               Workflow       @relation(fields: [id_workflow], references: [id])
+  usuario_etapa          UsuarioEtapa[]
+  auditoria              Auditoria[]
 }
 
-model grupo {
-  id           String         @id
-  nome         String
-  descricao    String?
-  grupousuario grupousuario[]
-  permissao    permissao[]
-}
-
-model grupousuario {
-  id         String  @id
-  id_usuario String
-  id_grupo   String
-  grupo      grupo   @relation(fields: [id_grupo], references: [id], map: "GrupoUsuario_id_grupo_fkey")
-  usuario    usuario @relation(fields: [id_usuario], references: [id], map: "GrupoUsuario_id_usuario_fkey")
-
-  @@index([id_grupo], map: "GrupoUsuario_id_grupo_fkey")
-  @@index([id_usuario], map: "GrupoUsuario_id_usuario_fkey")
-}
-
-model notificacao {
-  id         String  @id
-  id_usuario String
-  mensagem   String
-  usuario    usuario @relation(fields: [id_usuario], references: [id], map: "Notificacao_id_usuario_fkey")
-
-  @@index([id_usuario], map: "Notificacao_id_usuario_fkey")
-}
-
-model permissao {
-  id                String        @id
-  id_documento      String
-  id_grupo          String?
-  id_usuario        String?
-  id_tipo_permissao String
-  documento         documento     @relation(fields: [id_documento], references: [id], map: "Permissao_id_documento_fkey")
-  grupo             grupo?        @relation(fields: [id_grupo], references: [id], map: "Permissao_id_grupo_fkey")
-  tipopermissao     tipopermissao @relation(fields: [id_tipo_permissao], references: [id], map: "Permissao_id_tipo_permissao_fkey")
-  usuario           usuario?      @relation(fields: [id_usuario], references: [id], map: "Permissao_id_usuario_fkey")
-
-  @@index([id_documento], map: "Permissao_id_documento_fkey")
-  @@index([id_grupo], map: "Permissao_id_grupo_fkey")
-  @@index([id_tipo_permissao], map: "Permissao_id_tipo_permissao_fkey")
-  @@index([id_usuario], map: "Permissao_id_usuario_fkey")
-}
-
-model tipopermissao {
-  id        String      @id
-  tipo      String
-  permissao permissao[]
-}
-
-model tipousuario {
-  id      String    @id
-  tipo    String
-  usuario usuario[]
-}
-
-model usuario {
-  id              String            @id
-  nome            String
-  telefone        String?
-  email           String?
-  n_bi            String?
-  password        String
-  id_tipo_usuario String
-  auditoria       auditoria[]
-  documento       documento[]
-  grupousuario    grupousuario[]
-  notificacao     notificacao[]
-  permissao       permissao[]
-  tipousuario     tipousuario       @relation(fields: [id_tipo_usuario], references: [id], map: "Usuario_id_tipo_usuario_fkey")
-  usuarioetapa    usuarioetapa[]
-  versaodocumento versaodocumento[]
-  workflow        workflow[]
-
-  @@index([id_tipo_usuario], map: "Usuario_id_tipo_usuario_fkey")
-}
-
-model usuarioetapa {
-  id         String  @id
+model UsuarioEtapa {
+  id         String  @id @default(uuid())
   id_usuario String
   id_etapa   String
-  etapa      etapa   @relation(fields: [id_etapa], references: [id], map: "UsuarioEtapa_id_etapa_fkey")
-  usuario    usuario @relation(fields: [id_usuario], references: [id], map: "UsuarioEtapa_id_usuario_fkey")
-
-  @@index([id_etapa], map: "UsuarioEtapa_id_etapa_fkey")
-  @@index([id_usuario], map: "UsuarioEtapa_id_usuario_fkey")
+  usuario    Usuario @relation(fields: [id_usuario], references: [id])
+  etapa      Etapa   @relation(fields: [id_etapa], references: [id])
 }
 
-model versaodocumento {
-  id           String      @id
-  id_documento String
-  id_usuario   String
-  caminho      String
-  n_versao     Int
-  auditoria    auditoria[]
-  documento    documento   @relation(fields: [id_documento], references: [id], map: "VersaoDocumento_id_documento_fkey")
-  usuario      usuario     @relation(fields: [id_usuario], references: [id], map: "VersaoDocumento_id_usuario_fkey")
-
-  @@index([id_documento], map: "VersaoDocumento_id_documento_fkey")
-  @@index([id_usuario], map: "VersaoDocumento_id_usuario_fkey")
+model Auditoria {
+  id                  String          @id @default(uuid())
+  id_usuario          String
+  id_etapa            String
+  id_documento        String
+  id_versao_documento String
+  usuario             Usuario         @relation(fields: [id_usuario], references: [id])
+  etapa               Etapa           @relation(fields: [id_etapa], references: [id])
+  documento           Documento       @relation(fields: [id_documento], references: [id])
+  versao_documento    VersaoDocumento @relation(fields: [id_versao_documento], references: [id])
 }
 
-model workflow {
-  id         String  @id
-  nome       String
-  descricao  String?
+model Notificacao {
+  id         String @id @default(uuid())
   id_usuario String
-  etapa      etapa[]
-  usuario    usuario @relation(fields: [id_usuario], references: [id], map: "Workflow_id_usuario_fkey")
+  mensagem   String
 
-  @@index([id_usuario], map: "Workflow_id_usuario_fkey")
+  usuario Usuario @relation(fields: [id_usuario], references: [id])
 }
