@@ -85,11 +85,10 @@ model UsuariosGrupo {
 model Usuario {
   id                 String            @id @default(uuid())
   nome               String
-  telefone           String?
-  email              String?
-  n_bi               String?
+  telefone           String
+  email              String @unique
+  n_bi               String @unique
   password           String
-  id_tipo_usuario    String
   versoes_documentos VersaoDocumento[]
   usuario_grupos     UsuariosGrupo[]
   acesso_documentos  AcessoDocumento[]
