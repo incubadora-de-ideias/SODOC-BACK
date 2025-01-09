@@ -3,7 +3,6 @@ import routes from "./routes"
 import jwt from '@fastify/jwt';
 import fastifyCookie from '@fastify/cookie';
 import cors from '@fastify/cors';
-import routes from "./routes";
 import multipart  from '@fastify/multipart';
 
 const app = fastify({ logger: true });
