@@ -69,17 +69,19 @@ model AcessoDocumento {
 model Grupo {
   id             String          @id @default(uuid())
   nome           String
+  id_usuario     String
+  usuario        Usuario         @relation(fields: [id_usuario], references: [id])
   usuarios_grupo UsuariosGrupo[]
 }
 
 model UsuariosGrupo {
-  id        String  @id @default(uuid())
-  id_usario String
-  id_grupo  String
-  usuario   Usuario @relation(fields: [id_usario], references: [id])
-  grupo     Grupo   @relation(fields: [id_grupo], references: [id])
+  id         String  @id @default(uuid())
+  id_usuario String
+  id_grupo   String
+  usuario    Usuario @relation(fields: [id_usuario], references: [id])
+  grupo      Grupo   @relation(fields: [id_grupo], references: [id])
 
-  @@unique([id_grupo, id_usario])
+  @@unique([id_grupo, id_usuario])
 }
 
 model Usuario {
@@ -93,6 +95,7 @@ model Usuario {
   usuario_grupos     UsuariosGrupo[]
   acesso_documentos  AcessoDocumento[]
   notificacoes       Notificacao[]
+  grupos             Grupo[]
 }
 
 enum TipoNotificacao {

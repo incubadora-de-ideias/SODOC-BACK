@@ -1,9 +1,9 @@
 import { BaseService } from './base';
-import { grupoModel } from '../models/grupo';
-import { groupValidations } from '../validations/grupo';
+import { groupModel } from '../models/group';
+import { groupValidations } from '../validations/group';
 
 class GroupService extends BaseService {
-    model = grupoModel;
+    model = groupModel;
     createValidationSchema = groupValidations.getData;
     updateValidationSchema = groupValidations.getDataToUpdate;
 }

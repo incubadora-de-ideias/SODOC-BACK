@@ -6,7 +6,7 @@ class UserModel extends BaseModel<Usuario> {
     model = prisma.usuario;
     include = {};
 
-    async getData(identification: string){
+    async getData(identification: string) {
         return this.model.findFirst({
             where: {
                 OR: [
@@ -17,10 +17,34 @@ class UserModel extends BaseModel<Usuario> {
                         telefone: identification
                     },
                     {
-                        n_bi: identification    
+                        n_bi: identification
                     }
                 ]
             }
+        })
+    }
+
+    async getByGroup(id_grupo: string) {
+        return this.model.findMany({
+            where: {
+                OR: [
+                    {
+                        usuario_grupos: {
+                            some: {
+                                id_grupo
+                            }
+                        }
+                    },
+                    {
+                        grupos: {
+                            some: {
+                                id: id_grupo
+                            }
+                        }
+                    }
+                ]
+            },
+            include: this.include
         })
     }
 
