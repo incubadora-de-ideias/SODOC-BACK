@@ -3,22 +3,104 @@ import { usersGroupsModel } from "../models/users_groups";
 import { usersGroupsValidations } from "../validations/users_groups";
 import { BaseService } from "./base";
 import { ErrorsHandler } from "../errors/handler";
+import { mailService } from "./mail";
+import prisma from "../lib/prisma";
+import { userModel } from "../models/user";
+import { groupModel } from "../models/group";
+import { notificationModel } from "../models/notification";
+import { validateUserEmailUseCase } from "../lib/mail";
 
 class UsersGroupsService extends BaseService {
-    model = usersGroupsModel;
-    createValidationSchema = usersGroupsValidations.getData;
-    updateValidationSchema = usersGroupsValidations.getDataToUpdate;
+  model = usersGroupsModel;
+  createValidationSchema = usersGroupsValidations.getData;
+  updateValidationSchema = usersGroupsValidations.getDataToUpdate;
 
-    async getGroupsByUser(req: FastifyRequest, res: FastifyReply) {
-        console.log(req.params);
-        try {
-            const { id_usuario } = usersGroupsValidations.getGroupsByUser.parse(req.params);
-            const data = await this.model.getGroupsByUser(id_usuario);
-            res.send(data);
-        } catch (error) {
-            ErrorsHandler.handle(error, res);
-        }
+  async create(req: FastifyRequest, res: FastifyReply) {
+    try {
+      const data = this.createValidationSchema.parse(req.body);
+      const group = await groupModel.getById(data.id_grupo);
+      const user = await userModel.getById(data.id_usuario);
+
+      if (!group) {
+        throw new Error("Grupo não encontrado");
+      }
+
+      if (!user) {
+        throw new Error("Usuário não encontrado");
+      }
+
+      
+      const userGroup = await this.model.create(data);
+
+      const payload = { idUserGroup: userGroup.id };
+
+      const token = req.jwt.sign(payload);
+
+      const url = `${req.protocol}://${req.hostname}`;
+
+      await validateUserEmailUseCase.run("CONFIRMACAO", user?.email, {
+        groupName: group.nome,
+        confirmationLink: `${url}/users_groups/confirmation?token=${token}`,
+        link: url,
+      });
+
+      await notificationModel.create({
+        id_usuario: data.id_usuario,
+        titulo: "Convite para grupo",
+        descricao: `Você foi convidado para o grupo ${group.nome}`,
+        tipo: "CONFIRMACAO",
+        destino: "EXTERNO",
+      });
+
+      res.send(userGroup);
+    } catch (error) {
+      ErrorsHandler.handle(error, res);
     }
+  }
+
+  async getGroupsByUser(req: FastifyRequest, res: FastifyReply) {
+    console.log(req.params);
+    try {
+      const { id_usuario } = usersGroupsValidations.getGroupsByUser.parse(
+        req.params
+      );
+      const data = await this.model.getGroupsByUser(id_usuario);
+      res.send(data);
+    } catch (error) {
+      ErrorsHandler.handle(error, res);
+    }
+  }
+  async getByGroup(req: FastifyRequest, res: FastifyReply) {
+    try {
+      console.log(req.params);
+      const { id_grupo } = usersGroupsValidations.getByGroup.parse(req.params);
+      const data = await this.model.getByGroup(id_grupo);
+      res.send(data);
+    } catch (error) {
+      console.log(error);
+      ErrorsHandler.handle(error, res);
+    }
+  }
+
+  async groupConfirmation(req: FastifyRequest, res: FastifyReply) {
+    const { token } = req.query as { token: string };
+    const { idUserGroup } = req.jwt.verify(token) as {
+      idUserGroup: string;
+    };
+
+    if (!idUserGroup) {
+      return res.status(400).send({
+        message: "Token de autenticação inválido ou expirado",
+        sucess: false,
+      });
+    }
+
+    const userGroup = await this.model.update(idUserGroup, {
+        confirmado: true,
+    });
+
+    res.send(userGroup);
+  }
 }
 
 export const usersGroupsService = new UsersGroupsService();

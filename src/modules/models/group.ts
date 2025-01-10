@@ -11,6 +11,15 @@ const groupIncludes = {
 class GroupModel extends BaseModel<Grupo> {
     protected model = prisma.grupo;
     protected include = groupIncludes;
+
+    async getUserGroups(id_usuario: string) {
+        return this.model.findMany({
+            where: {
+                id_usuario
+            },
+            include: this.include
+        })
+    }
 }
 
 export const groupModel = new GroupModel();

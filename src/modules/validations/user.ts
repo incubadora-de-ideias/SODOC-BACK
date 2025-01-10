@@ -16,9 +16,6 @@ class UserValidations {
         password: z.string()
     });
 
-    getByGroup = z.object({
-        id_grupo: z.string()
-    })
 
 }
 
