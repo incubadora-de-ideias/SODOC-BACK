@@ -8,6 +8,7 @@ import { notifications } from "./notification.routes";
 import { uploads } from "./uploads-documents.routes";
 import { works } from "./work.routes";
 import { usersGroups } from "./users_group.routes";
+import { tasks } from "./task.routes";
 
 export default async function routes(app: FastifyInstance) {
     app.post("/auth/login", authService.login);
@@ -21,5 +22,6 @@ export default async function routes(app: FastifyInstance) {
         await uploads(privateRoute);
         await works(privateRoute);
         await usersGroups(privateRoute);
+        await tasks(privateRoute);
     })
 }

@@ -12,6 +12,8 @@ class UploadsDocumentsService {
             const data = req.body as { [key: string]: MultipartFile };
             const { fields, files } = await getFieldsAndFiles(data);
 
+            console.log({ fields, files });
+
             // Verificar os arquivos
             for (const [key, file] of Object.entries(files)) {
                 const fileExtension = file.filename.split('.').pop()?.toLowerCase();
