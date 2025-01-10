@@ -4,6 +4,7 @@ import jwt from '@fastify/jwt';
 import fastifyCookie from '@fastify/cookie';
 import cors from '@fastify/cors';
 import multipart  from '@fastify/multipart';
+import prisma from '@/modules/lib/prisma';
 
 const app = fastify({ logger: true });
 
