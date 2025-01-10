@@ -17,6 +17,7 @@ model Documento {
   nome               String
   descricao          String?
   caminho            String
+  data               DateTime?          @default(now())
   versoes_documentos VersaoDocumento[]
   acessos            AcessoDocumento[]
   tarefas_documentos TarefasDocumentos[]
