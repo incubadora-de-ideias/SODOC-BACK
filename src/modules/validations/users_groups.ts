@@ -12,6 +12,9 @@ class UsersGroupsValidatoins {
         id_usuario: z.string()
     })
     
+    getByGroup = z.object({
+        id_grupo: z.string()
+    })
 }
 
 export const usersGroupsValidations = new UsersGroupsValidatoins();

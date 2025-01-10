@@ -7,6 +7,10 @@ class GroupValidations {
     })
 
     public getDataToUpdate = this.getData.partial()
+
+    public getUserGroups = z.object({
+        id_usuario: z.string()
+    })
 }
 
 export const groupValidations = new GroupValidations();

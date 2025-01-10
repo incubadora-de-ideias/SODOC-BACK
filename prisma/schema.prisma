@@ -1,9 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -11,11 +5,6 @@ generator client {
 datasource db {
   provider = "mysql"
   url      = env("DATABASE_URL")
-}
-
-enum Permissao {
-  EDITAR
-  VER
 }
 
 model Documento {
@@ -41,8 +30,8 @@ model TarefasDocumentos {
   id_tarefa    String
   id_documento String
 
-  tarefa    Tarefa    @relation(fields: [id_tarefa], references: [id])
-  documento Documento @relation(fields: [id_documento], references: [id])
+  tarefa    Tarefa    @relation(fields: [id_tarefa], references: [id], onDelete: Cascade)
+  documento Documento @relation(fields: [id_documento], references: [id], onDelete: Cascade)
 }
 
 model VersaoDocumento {
@@ -52,34 +41,35 @@ model VersaoDocumento {
   descricao    String
   caminho      String
   data_criacao DateTime  @default(now())
-  documento    Documento @relation(fields: [id_documento], references: [id])
-  usuario      Usuario   @relation(fields: [id_usuario], references: [id])
+  documento    Documento @relation(fields: [id_documento], references: [id], onDelete: Cascade)
+  usuario      Usuario   @relation(fields: [id_usuario], references: [id], onDelete: Cascade)
 }
 
 model AcessoDocumento {
   id           String    @id @default(uuid())
   id_usuario   String
   id_documento String
-  permissao    Permissao @default(VER)
+  aprova       Boolean   @default(false)
 
-  usuario   Usuario   @relation(fields: [id_usuario], references: [id])
-  documento Documento @relation(fields: [id_documento], references: [id])
+  usuario   Usuario   @relation(fields: [id_usuario], references: [id], onDelete: Cascade)
+  documento Documento @relation(fields: [id_documento], references: [id], onDelete: Cascade)
 }
 
 model Grupo {
   id             String          @id @default(uuid())
   nome           String
   id_usuario     String
-  usuario        Usuario         @relation(fields: [id_usuario], references: [id])
+  usuario        Usuario         @relation(fields: [id_usuario], references: [id], onDelete: Cascade)
   usuarios_grupo UsuariosGrupo[]
 }
 
 model UsuariosGrupo {
-  id         String  @id @default(uuid())
+  id         String   @id @default(uuid())
   id_usuario String
   id_grupo   String
-  usuario    Usuario @relation(fields: [id_usuario], references: [id])
-  grupo      Grupo   @relation(fields: [id_grupo], references: [id])
+  confirmado Boolean? @default(false)
+  usuario    Usuario  @relation(fields: [id_usuario], references: [id], onDelete: Cascade)
+  grupo      Grupo    @relation(fields: [id_grupo], references: [id], onDelete: Cascade)
 
   @@unique([id_grupo, id_usuario])
 }
@@ -103,6 +93,7 @@ enum TipoNotificacao {
   PENDENTE
   SUCESSO
   MENSAGEM
+  CONFIRMACAO
 }
 
 enum DestinoNotificacao {
@@ -115,9 +106,9 @@ model Notificacao {
   id_usuario String
   titulo     String
   descricao  String
-  data       DateTime           @default(now())
-  lida       Boolean            @default(false)
+  data       DateTime?          @default(now())
+  lida       Boolean?           @default(false)
   tipo       TipoNotificacao    @default(MENSAGEM)
   destino    DestinoNotificacao @default(INTERNO)
-  usuario    Usuario            @relation(fields: [id_usuario], references: [id])
+  usuario    Usuario            @relation(fields: [id_usuario], references: [id], onDelete: Cascade)
 }
