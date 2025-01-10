@@ -23,6 +23,7 @@ model Tarefa {
   nome               String
   descricao          String?
   id_usuario         String
+  usuario            Usuario             @relation(fields: [id_usuario], references: [id], onDelete: Cascade)
   tarefas_documentos TarefasDocumentos[]
 }
 
@@ -87,6 +88,7 @@ model Usuario {
   acesso_documentos  AcessoDocumento[]
   notificacoes       Notificacao[]
   grupos             Grupo[]
+  tarefa             Tarefa[]
 }
 
 enum TipoNotificacao {
