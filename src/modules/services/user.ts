@@ -26,19 +26,6 @@ class UserService extends BaseService {
         }
     }
 
-    async getByGroup(req: FastifyRequest, res: FastifyReply) {
-        try {
-            console.log(req.params);
-            const { id_grupo } = userValidations.getByGroup.parse(req.params);
-            const data = await this.model.getByGroup(id_grupo);
-            res.send(data);
-
-        } catch(error) {
-            console.log(error);
-            ErrorsHandler.handle(error, res);
-        }
-    }
-
 }
 
 export const userService = new UserService();
