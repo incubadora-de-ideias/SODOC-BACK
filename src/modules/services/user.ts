@@ -2,7 +2,6 @@ import { FastifyReply, FastifyRequest } from "fastify";
 import { userModel } from "../models/user";
 import { userValidations } from "../validations/user";
 import { BaseService } from "./base";
-import { send } from "process";
 import { ErrorsHandler } from "../errors/handler";
 import { hashService } from "./hash";
 
@@ -23,6 +22,19 @@ class UserService extends BaseService {
             
             res.send(user);
         } catch (error) {
+            ErrorsHandler.handle(error, res);
+        }
+    }
+
+    async getByGroup(req: FastifyRequest, res: FastifyReply) {
+        try {
+            console.log(req.params);
+            const { id_grupo } = userValidations.getByGroup.parse(req.params);
+            const data = await this.model.getByGroup(id_grupo);
+            res.send(data);
+
+        } catch(error) {
+            console.log(error);
             ErrorsHandler.handle(error, res);
         }
     }

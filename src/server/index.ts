@@ -17,7 +17,7 @@ app.get('/', async (request, reply) => {
 const start = async () => {
   try {
     app.register(jwt, {
-      secret: process.env.JWT_SECRET!,
+      secret: process.env.JWT_SECRET || "secret",
       sign: {
         expiresIn: process.env.JWT_EXPIRES_IN!,
       },
@@ -33,7 +33,7 @@ const start = async () => {
     });
 
     await app.register(cors, {
-      origin: process.env.CROSS_ORIGIN,
+      origin: process.env.CROSS_ORIGIN || "http://localhost:5173",
       credentials: true,
     });
     await app.register(multipart, {
