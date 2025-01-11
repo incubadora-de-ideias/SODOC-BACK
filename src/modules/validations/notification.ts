@@ -8,6 +8,10 @@ class NotificationValidations {
     })
 
     public getDataToUpdate = this.getData.partial()
+
+    public markAsread = z.object({
+        id: z.string()
+    })
 }
 
 export const notificationValidations = new NotificationValidations();

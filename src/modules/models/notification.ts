@@ -11,6 +11,13 @@ class NotificationModel extends BaseModel<Notificacao> {
             data
         })
     }
+    async markAsread(id: string){
+        const update =  await this.model.update({
+            where: { id },
+            data: {lida: true}
+        });
+        return update;
+    }
 }
 
 export const notificationModel = new NotificationModel();
