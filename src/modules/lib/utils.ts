@@ -1,3 +1,4 @@
+import z from "zod";
 import { emailOptions } from "../templates/email";
 import { TemplateVariables } from "../types/mail";
 
@@ -30,3 +31,8 @@ export function renderTemplate<
     return acc.replace(regex, value as string); 
   }, template);
 }
+
+export const nonEmptyString = () =>
+  z.string().min(1).refine(value => value.trim().length > 0, {
+    message: "Campo não pode ser vazio ou apenas espaços",
+  });

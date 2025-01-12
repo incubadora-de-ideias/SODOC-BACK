@@ -13,12 +13,12 @@ class GroupService extends BaseService {
     try {
       const { id_usuario } = groupValidations.getUserGroups.parse(req.params);
       const data = await this.model.getUserGroups(id_usuario);
+      console.log(data)
       res.send(data);
     } catch (error) {
       ErrorsHandler.handle(error, res);
     }
   }
-
 }
 
 export const groupService = new GroupService();

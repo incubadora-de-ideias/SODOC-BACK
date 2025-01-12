@@ -49,6 +49,7 @@ export abstract class BaseService {
           currentPage,
         },
       };
+      console.log("usuarios",data)
 
       res.send(data);
     } catch (error) {

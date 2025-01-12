@@ -63,6 +63,7 @@ model Grupo {
   id_usuario     String
   usuario        Usuario         @relation(fields: [id_usuario], references: [id], onDelete: Cascade)
   usuarios_grupo UsuariosGrupo[]
+  @@unique([nome, id_usuario])
 }
 
 model UsuariosGrupo {

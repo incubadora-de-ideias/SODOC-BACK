@@ -19,40 +19,45 @@ class UsersGroupsService extends BaseService {
     try {
       const data = this.createValidationSchema.parse(req.body);
       const group = await groupModel.getById(data.id_grupo);
-      const user = await userModel.getById(data.id_usuario);
 
       if (!group) {
         throw new Error("Grupo não encontrado");
       }
 
-      if (!user) {
-        throw new Error("Usuário não encontrado");
-      }
+      const usersGroups = data.usuarios?.map(async (id_usuario) => {
+        const user = await userModel.getById(id_usuario);
 
-      
-      const userGroup = await this.model.create(data);
+        if (!user) {
+          throw new Error("Usuário não encontrado");
+        }
+        const userGroup = await this.model.create({
+          id_usuario,
+          id_grupo: data.id_grupo,
+        });
 
-      const payload = { idUserGroup: userGroup.id };
+        const payload = { idUserGroup: userGroup.id };
 
-      const token = req.jwt.sign(payload);
+        const token = req.jwt.sign(payload);
 
-      const url = `${req.protocol}://${req.hostname}`;
+        const url = `${req.protocol}://${req.hostname}`;
 
-      await validateUserEmailUseCase.run("CONFIRMACAO", user?.email, {
-        groupName: group.nome,
-        confirmationLink: `${url}/users_groups/confirmation?token=${token}`,
-        link: url,
+        await validateUserEmailUseCase.run("CONFIRMACAO", user?.email, {
+          groupName: group.nome,
+          confirmationLink: `${url}/users_groups/confirmation?token=${token}`,
+          link: url,
+        });
+
+        await notificationModel.create({
+          id_usuario,
+          titulo: "Convite para grupo",
+          descricao: `Você foi convidado para o grupo ${group.nome}`,
+          tipo: "CONFIRMACAO",
+          destino: "EXTERNO",
+        });
+        return userGroup;
       });
 
-      await notificationModel.create({
-        id_usuario: data.id_usuario,
-        titulo: "Convite para grupo",
-        descricao: `Você foi convidado para o grupo ${group.nome}`,
-        tipo: "CONFIRMACAO",
-        destino: "EXTERNO",
-      });
-
-      res.send(userGroup);
+      res.send(usersGroups);
     } catch (error) {
       ErrorsHandler.handle(error, res);
     }
@@ -96,7 +101,7 @@ class UsersGroupsService extends BaseService {
     }
 
     const userGroup = await this.model.update(idUserGroup, {
-        confirmado: true,
+      confirmado: true,
     });
 
     res.send(userGroup);
