@@ -1,10 +1,11 @@
 import z from 'zod';
+import { nonEmptyString } from '../lib/utils';
 
 class WorkValidations {
     public getData = z.object({
-        nome: z.string(),
-        descricao: z.string(),
-        id_usuario: z.string()
+        nome: nonEmptyString(),
+        descricao: nonEmptyString(),
+        id_usuario: nonEmptyString()
     })
 
     public getDataToUpdate = this.getData.partial()

@@ -1,20 +1,21 @@
 import z from "zod";
+import { nonEmptyString } from "../lib/utils";
 
 class UsersGroupsValidatoins {
-    getData = z.object({
-        id_usuario: z.string(),
-        id_grupo: z.string()
-    })
+  getData = z.object({
+    usuarios: z.array(z.string()).optional(),
+    id_grupo: nonEmptyString(),
+  });
 
-    getDataToUpdate = this.getData.partial();
+  getDataToUpdate = this.getData.partial();
 
-    getGroupsByUser = z.object({
-        id_usuario: z.string()
-    })
-    
-    getByGroup = z.object({
-        id_grupo: z.string()
-    })
+  getGroupsByUser = z.object({
+    id_usuario: nonEmptyString(),
+  });
+
+  getByGroup = z.object({
+    id_grupo: nonEmptyString(),
+  });
 }
 
 export const usersGroupsValidations = new UsersGroupsValidatoins();

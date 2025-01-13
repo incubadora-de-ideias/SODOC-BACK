@@ -3,6 +3,10 @@ import prisma from "../lib/prisma";
 import { Grupo, Prisma } from "@prisma/client";
 
 
+type TGroupDataToCreate = Omit<Grupo, "id"> & {
+    usuarios?: string[]
+}
+
 const groupIncludes = {
     usuario: true,
     usuarios_grupo: true,
@@ -11,6 +15,19 @@ const groupIncludes = {
 class GroupModel extends BaseModel<Grupo> {
     protected model = prisma.grupo;
     protected include = groupIncludes;
+
+    async create({ usuarios, ...rest}: TGroupDataToCreate) {
+        return this.model.create({
+            data: {
+                ...rest,
+                usuarios_grupo: {
+                    create: usuarios?.map(id_usuario => ({
+                        id_usuario
+                    }))
+                }
+            },
+        })
+    }
 
     async getUserGroups(id_usuario: string) {
         return this.model.findMany({

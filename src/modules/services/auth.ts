@@ -49,25 +49,25 @@ class AuthService {
    * }
    */
   async authenticate(req: FastifyRequest, res: FastifyReply) {
-    // try {
-    //   const token = req.cookies.access_token;
-    //   if (!token) {
-    //     return res.status(401).send({ message: "Precisa de autenticação" });
-    //   }
+    try {
+      const token = req.cookies.access_token;
+      if (!token) {
+        return res.status(401).send({ message: "Precisa de autenticação" });
+      }
 
-    //   const decoded = req.jwt.decode<FastifyJWT['user']>(token);
+      const decoded = req.jwt.decode<FastifyJWT['user']>(token);
       
-    //   if (!decoded) {
-    //     return res.status(401).send({ message: "Token inválido ou expirado" });
-    //   }
+      if (!decoded) {
+        return res.status(401).send({ message: "Token inválido ou expirado" });
+      }
 
-    //   const user = req.jwt.verify<FastifyJWT["user"]>(token);
+      const user = req.jwt.verify<FastifyJWT["user"]>(token);
 
-    //   req.user = user;
-    // } catch (err) {
-    //   console.error("Erro na autenticação:", err);
-    //   return res.status(401).send({ message: "Token inválido ou expirado" });
-    // }
+      req.user = user;
+    } catch (err) {
+      console.error("Erro na autenticação:", err);
+      return res.status(401).send({ message: "Token inválido ou expirado" });
+    }
   }
 
 

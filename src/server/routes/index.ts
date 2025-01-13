@@ -11,10 +11,10 @@ import { usersGroups } from "./users_group.routes";
 import { tasks } from "./task.routes";
 
 export default async function routes(app: FastifyInstance) {
-    app.post("/auth/login", authService.login);
+    app.post("/login", authService.login);
     app.register(async (privateRoute) => {
-        privateRoute.delete("/auth/logout", authService.logout);
         privateRoute.addHook("preHandler", authService.authenticate);
+        privateRoute.delete("/logout", authService.logout);
         await users(privateRoute);
         await documents(privateRoute);
         await groups(privateRoute);

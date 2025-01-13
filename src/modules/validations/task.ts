@@ -1,10 +1,11 @@
 import z from "zod";
+import { nonEmptyString } from "../lib/utils";
 
 class TaskValidation {
   getData = z.object({
-    nome: z.string(),
-    descricao: z.string(),
-    id_usuario: z.string(),
+    nome: nonEmptyString(),
+    descricao: nonEmptyString(),
+    id_usuario: nonEmptyString(),
   });
 
   getDataToUpdate = this.getData.partial();
