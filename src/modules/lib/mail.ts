@@ -27,7 +27,7 @@ class ValidateUserEmailUseCase {
         titulo: `Notificação de ${type}`,
         descricao: JSON.stringify(variables), 
         tipo: type,
-        destino: 'INTERNO' as DestinoNotificacao, 
+        destino: 'EXTERNO' as DestinoNotificacao, 
     };
     const sendNotification = await notificationModel.create(notificacao);
   
