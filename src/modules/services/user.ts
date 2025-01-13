@@ -16,10 +16,6 @@ class UserService extends BaseService {
             const data = this.createValidationSchema.parse(req.body);
             const password = await hashService.hashPassword(data.password);
 
-            if(validateBiFormat(data.n_bi)) {
-                return res.status(400).send({ message: "Número de BI inválido" });
-            }
-
             const user = await this.model.create({
                 ...data,
                 password

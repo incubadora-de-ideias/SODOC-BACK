@@ -9,19 +9,23 @@ import { uploads } from "./uploads-documents.routes";
 import { works } from "./work.routes";
 import { usersGroups } from "./users_group.routes";
 import { tasks } from "./task.routes";
+import { reviewers } from "./reviewer.routes";
+import { usersGroupsService } from "@/modules/services/users_group";
 
 export default async function routes(app: FastifyInstance) {
-    app.post("/login", authService.login);
-    app.register(async (privateRoute) => {
-        privateRoute.addHook("preHandler", authService.authenticate);
-        privateRoute.delete("/logout", authService.logout);
-        await users(privateRoute);
-        await documents(privateRoute);
-        await groups(privateRoute);
-        await notifications(privateRoute);
-        await uploads(privateRoute);
-        await works(privateRoute);
-        await usersGroups(privateRoute);
-        await tasks(privateRoute);
-    })
+  app.post("/login", authService.login);
+  app.get("/users_groups/confirmation", usersGroupsService.groupConfirmation);
+  app.register(async (privateRoute) => {
+    privateRoute.addHook("preHandler", authService.authenticate);
+    privateRoute.delete("/logout", authService.logout);
+    await users(privateRoute);
+    await documents(privateRoute);
+    await groups(privateRoute);
+    await notifications(privateRoute);
+    await uploads(privateRoute);
+    await works(privateRoute);
+    await usersGroups(privateRoute);
+    await tasks(privateRoute);
+    await reviewers(privateRoute);
+  });
 }

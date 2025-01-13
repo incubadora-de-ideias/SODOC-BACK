@@ -10,7 +10,5 @@ export async function usersGroups(app: FastifyInstance) {
   app.get("/users_groups/user/:id_usuario", async (req, res) => {
     return usersGroupsService.getGroupsByUser(req, res);
   });
-  app.get("/users_groups/confirmation", async (req, res) => {
-    usersGroupsService.groupConfirmation(req, res);
-  });
+  
 }
