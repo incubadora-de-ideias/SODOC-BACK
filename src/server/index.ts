@@ -11,6 +11,7 @@ const app = fastify({ logger: true });
 const port = Number(process.env.PORT) || 5000;
 
 app.get('/', async (request, reply) => {
+  await prisma.notificacao.deleteMany();
   return { hello: 'world' };
 });
 

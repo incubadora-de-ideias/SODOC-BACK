@@ -13,6 +13,7 @@ export abstract class BaseService {
   queryValidation: ZodSchema = QueryValidations.getData;
 
   async create(req: FastifyRequest, res: FastifyReply) {
+    console.log(req.body);
     try {
       const data = this.createValidationSchema.parse(req.body);
 
@@ -49,7 +50,6 @@ export abstract class BaseService {
           currentPage,
         },
       };
-      console.log("usuarios",data)
 
       res.send(data);
     } catch (error) {
