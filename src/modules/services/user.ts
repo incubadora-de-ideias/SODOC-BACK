@@ -41,7 +41,6 @@ class UserService extends BaseService {
             ErrorsHandler.handle(error, res);
         }
     }
-
-}
+}   
 
 export const userService = new UserService();
