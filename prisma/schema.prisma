@@ -12,7 +12,7 @@ model Documento {
   nome               String
   descricao          String?
   caminho            String
-  data               DateTime?          @default(now())
+  data               DateTime?           @default(now())
   versoes_documentos VersaoDocumento[]
   acessos            AcessoDocumento[]
   tarefas_documentos TarefasDocumentos[]
@@ -23,6 +23,7 @@ model Tarefa {
   nome               String
   descricao          String?
   id_usuario         String
+  created_at         DateTime?           @default(now())
   usuario            Usuario             @relation(fields: [id_usuario], references: [id], onDelete: Cascade)
   tarefas_documentos TarefasDocumentos[]
 }
@@ -32,8 +33,9 @@ model TarefasDocumentos {
   id_tarefa    String
   id_documento String
 
-  tarefa    Tarefa    @relation(fields: [id_tarefa], references: [id], onDelete: Cascade)
-  documento Documento @relation(fields: [id_documento], references: [id], onDelete: Cascade)
+  pedidos_revisao PedidoRevisao[]
+  tarefa          Tarefa          @relation(fields: [id_tarefa], references: [id], onDelete: Cascade)
+  documento       Documento       @relation(fields: [id_documento], references: [id], onDelete: Cascade)
 }
 
 model VersaoDocumento {
@@ -57,12 +59,35 @@ model AcessoDocumento {
   documento Documento @relation(fields: [id_documento], references: [id], onDelete: Cascade)
 }
 
+model Comentario {
+  id         String   @id @default(uuid())
+  id_usuario String
+  texto      String
+  criado_em  DateTime @default(now())
+  id_revisor String
+
+  revisor Revisor @relation(fields: [id_revisor], references: [id], onDelete: Cascade)
+  usuario Usuario @relation(fields: [id_usuario], references: [id], onDelete: Cascade)
+}
+
+model PedidoRevisao {
+  id                     String    @id @default(uuid())
+  id_usuario_solicitante String
+  criado_em              DateTime? @default(now())
+  id_tarefa_documentos   String
+
+  revisores         Revisor[]
+  solicitante       Usuario            @relation(fields: [id_usuario_solicitante], references: [id], onDelete: Cascade)
+  TarefasDocumentos TarefasDocumentos? @relation(fields: [id_tarefa_documentos], references: [id], onDelete: Cascade)
+}
+
 model Grupo {
   id             String          @id @default(uuid())
   nome           String
   id_usuario     String
   usuario        Usuario         @relation(fields: [id_usuario], references: [id], onDelete: Cascade)
   usuarios_grupo UsuariosGrupo[]
+
   @@unique([nome, id_usuario])
 }
 
@@ -71,8 +96,9 @@ model UsuariosGrupo {
   id_usuario String
   id_grupo   String
   confirmado Boolean? @default(false)
-  usuario    Usuario  @relation(fields: [id_usuario], references: [id], onDelete: Cascade)
-  grupo      Grupo    @relation(fields: [id_grupo], references: [id], onDelete: Cascade)
+
+  usuario Usuario @relation(fields: [id_usuario], references: [id], onDelete: Cascade)
+  grupo   Grupo   @relation(fields: [id_grupo], references: [id], onDelete: Cascade)
 
   @@unique([id_grupo, id_usuario])
 }
@@ -90,19 +116,23 @@ model Usuario {
   notificacoes       Notificacao[]
   grupos             Grupo[]
   tarefa             Tarefa[]
+  Comentario         Comentario[]
+  PedidoRevisao      PedidoRevisao[]
+  Revisor            Revisor[]
 }
 
-enum TipoNotificacao {
-  ALERTA
-  PENDENTE
-  SUCESSO
-  MENSAGEM
-  CONFIRMACAO
-}
+model Revisor {
+  id                String        @id @default(uuid())
+  id_usuario        String
+  id_pedido_revisao String
+  data_aprovacao    DateTime?
+  estado            EstadoRevisao @default(PENDENTE)
+  aprovado          Boolean       @default(false)
 
-enum DestinoNotificacao {
-  INTERNO
-  EXTERNO
+  comentarios Comentario[]
+
+  usuario        Usuario       @relation(fields: [id_usuario], references: [id], onDelete: Cascade)
+  pedido_revisao PedidoRevisao @relation(fields: [id_pedido_revisao], references: [id], onDelete: Cascade)
 }
 
 model Notificacao {
@@ -114,5 +144,26 @@ model Notificacao {
   lida       Boolean?           @default(false)
   tipo       TipoNotificacao    @default(MENSAGEM)
   destino    DestinoNotificacao @default(INTERNO)
-  usuario    Usuario            @relation(fields: [id_usuario], references: [id], onDelete: Cascade)
+
+  usuario Usuario @relation(fields: [id_usuario], references: [id], onDelete: Cascade)
+}
+
+enum EstadoRevisao {
+  PENDENTE
+  EM_ANDAMENTO
+  CONCLUIDO
+}
+
+enum TipoNotificacao {
+  ALERTA
+  PENDENTE
+  SUCESSO
+  MENSAGEM
+  CONFIRMACAO
+  REVISAO
+}
+
+enum DestinoNotificacao {
+  INTERNO
+  EXTERNO
 }
