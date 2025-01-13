@@ -69,6 +69,16 @@ class UserModel extends BaseModel<Usuario> {
       include: this.include,
     });
   }
+  
+  async getIdByEmial(email: string){
+    const id = await prisma.usuario.findFirst({
+      where: { email: {
+        equals: email
+      }},
+      select: {id: true}
+    })
+    return id;
+  }
 }
 
 export const userModel = new UserModel();

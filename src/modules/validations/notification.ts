@@ -9,8 +9,11 @@ class NotificationValidations {
   });
 
   public getDataToUpdate = this.getData.partial();
-  getUserId = z.object({
+  public getUserId = z.object({
     userId: nonEmptyString(),
+  });
+  public getIdNotification = z.object({
+    id: nonEmptyString()
   });
 }
 
