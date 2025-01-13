@@ -1,4 +1,3 @@
-import { ZodType, ZodTypeDef } from "zod";
 import { taskModel } from "../models/task";
 import { taskValidations } from "../validations/task";
 import { BaseService } from "./base";
@@ -14,7 +13,9 @@ import { taskDocumentModel } from "../models/task_document";
 import { userModel } from "../models/user";
 import { validateUserEmailUseCase } from "../lib/mail";
 import { notificationModel } from "../models/notification";
-import { Documento, Tarefa } from "@prisma/client";
+import { Documento, PedidoRevisao, Tarefa } from "@prisma/client";
+import { askRevisionModel } from "../models/ask_revision";
+import { reviewerModel } from "../models/reviewer";
 
 class TaskService extends BaseService {
   model = taskModel;
@@ -31,7 +32,7 @@ class TaskService extends BaseService {
       const { descricao, id_usuario, nome, usuarios } =
         taskValidations.getData.parse(fields);
 
-        console.log("Usuários", usuarios);
+      console.log("Usuários", usuarios);
 
       const task = (await this.model.create({
         descricao,
@@ -40,6 +41,7 @@ class TaskService extends BaseService {
       })) as Tarefa;
 
       for (const [key, file] of Object.entries(files)) {
+        console.log(file.filename);
         const fileExtension = file.filename.split(".").pop()?.toLowerCase();
         console.log(fileExtension);
 
@@ -71,28 +73,46 @@ class TaskService extends BaseService {
             fileStream.end();
             const documentsFormate = {
               nome: file.filename,
-              descricao: null,
+              descricao: JSON.stringify(fields), // Converte o objeto em string JSON
               caminho: filePath,
             };
-            const saveFile = await documentModel.create(documentsFormate) as Documento;
+            const saveFile = (await documentModel.create(
+              documentsFormate
+            )) as Documento;
+
             const taskDocument = await taskDocumentModel.create({
               id_tarefa: task.id,
               id_documento: saveFile.id,
               id_usuario,
             });
 
-            usuarios?.map(async (id_usuario: string) => {
-              const user = await userModel.getById(id_usuario);
+            const askReview = (await askRevisionModel.create({
+              id_tarefa_documentos: taskDocument.id,
+              id_usuario_solicitante: id_usuario,
+            })) as PedidoRevisao;
+
+            usuarios?.map(async (userId: { id: string }) => {
+              const user = await userModel.getById(userId.id);
               if (!user) {
                 throw new Error("Usuário não encontrado");
               }
+
+              const reviewer = await reviewerModel.create({
+                id_usuario: userId.id,
+                id_pedido_revisao: askReview.id,
+                data_aprovacao: null,
+                aprovado: false,
+                estado: "PENDENTE",
+              });
+
               await validateUserEmailUseCase.run("REVISAO", user.email, {
                 userName: user.nome,
                 taskName: task.nome,
                 link: `${process.env.CROSS_ORIGIN}/tasks/${task.id}`,
               });
+
               await notificationModel.create({
-                id_usuario,
+                id_usuario: userId.id,
                 titulo: "Pedido de revisão",
                 descricao: `Você foi solicitado para revisar a tarefa ${task.nome}`,
                 tipo: "REVISAO",

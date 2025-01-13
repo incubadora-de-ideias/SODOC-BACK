@@ -8,7 +8,9 @@ class TaskValidation {
     id_usuario: nonEmptyString(),
     usuarios: z
         .union([
-          z.array(nonEmptyString()),  
+          z.array(z.object({
+            id: nonEmptyString(),
+          })),  
           z.string().refine(
             (val) => {
               try {
@@ -25,7 +27,7 @@ class TaskValidation {
         ])
         .transform((val) => {
           if (typeof val === "string") {
-            return JSON.parse(val) as Array<string>;
+            return JSON.parse(val) as Array<{id: string}>;
           }
           return val;
         }),

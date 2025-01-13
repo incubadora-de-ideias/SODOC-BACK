@@ -1,4 +1,4 @@
-import { TarefasDocumentos } from "@prisma/client";
+import { Prisma, TarefasDocumentos } from "@prisma/client";
 import { BaseModel } from "./base";
 import prisma from "../lib/prisma";
 
@@ -9,9 +9,13 @@ type TDocumentTypeToCreate = Omit<
     id_usuario: string;
 };
 
+const taskDocumentIncludes = {
+    documento: true,
+} as Prisma.TarefasDocumentosInclude
+
 class TaskDocumentModel extends BaseModel<TarefasDocumentos> {
   model = prisma.tarefasDocumentos;
-  include = {};
+  include = taskDocumentIncludes;
 
   async create({ id_documento, id_tarefa, id_usuario }: TDocumentTypeToCreate) {
     return this.model.create({
