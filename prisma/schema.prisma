@@ -24,6 +24,7 @@ model Tarefa {
   descricao          String?
   id_usuario         String
   created_at         DateTime?           @default(now())
+  updated_at         DateTime            @updatedAt
   usuario            Usuario             @relation(fields: [id_usuario], references: [id], onDelete: Cascade)
   tarefas_documentos TarefasDocumentos[]
 }
@@ -78,7 +79,7 @@ model PedidoRevisao {
 
   revisores         Revisor[]
   solicitante       Usuario            @relation(fields: [id_usuario_solicitante], references: [id], onDelete: Cascade)
-  TarefasDocumentos TarefasDocumentos? @relation(fields: [id_tarefa_documentos], references: [id], onDelete: Cascade)
+  TarefasDocumentos TarefasDocumentos? @relation(fields: [id_tarefa_documentos], references: [id])
 }
 
 model Grupo {

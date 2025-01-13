@@ -4,7 +4,6 @@ import { userModel } from "../models/user";
 import { mailService } from "../services/mail";
 import { emailOptions } from "../templates/email";
 import { IMailService, TemplateVariables } from "../types/mail";
-import prisma from "./prisma";
 
 class ValidateUserEmailUseCase {
   constructor(private mailService: IMailService) {}
@@ -25,7 +24,7 @@ class ValidateUserEmailUseCase {
     const notificacao = {
         id_usuario: usuario.id,
         titulo: `Notificação de ${type}`,
-        descricao: JSON.stringify(variables), 
+        descricao: String(JSON.stringify(variables)), 
         tipo: type,
         destino: 'EXTERNO' as DestinoNotificacao, 
     };
