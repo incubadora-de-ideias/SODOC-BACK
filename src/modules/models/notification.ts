@@ -16,6 +16,9 @@ class NotificationModel extends BaseModel<Notificacao> {
       where: {
         id_usuario: userId,
       },
+      orderBy:{
+        data: "desc"
+      }
     });
   }
   async getUnreadCount(userId: string) {
@@ -34,7 +37,7 @@ class NotificationModel extends BaseModel<Notificacao> {
       return update;
   }
 
-  async getTitle(type: string){
+  async getTitleAndDescrition(type: string){
     let descricao = "";
     let titulo = "";
     
@@ -58,7 +61,7 @@ class NotificationModel extends BaseModel<Notificacao> {
       titulo = "🔗 Confirmação de Adição ao Grupo"
       descricao = "Você foi convidado para fazer parte do grupo <strong>{{groupName}}</strong>"
     }
-    return {descricao, titulo};   
+    return { descricao, titulo };   
   }
 }
 

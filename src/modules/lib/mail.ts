@@ -20,7 +20,7 @@ class ValidateUserEmailUseCase {
     if (!usuario) {
       throw new Error(`User with email ${email} not found`);
     }
-   const {descricao, titulo} = await notificationModel.getTitle(type); 
+   const {descricao, titulo} = await notificationModel.getTitleAndDescrition(type); 
     const notificacao = {
         id_usuario: usuario.id,
         titulo: titulo,
@@ -29,7 +29,7 @@ class ValidateUserEmailUseCase {
         destino: 'EXTERNO' as DestinoNotificacao, 
     };
     const sendNotification = await notificationModel.create(notificacao);
-  
+    
     return notificacao;
   }
 }
