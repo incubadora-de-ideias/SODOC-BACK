@@ -1,4 +1,3 @@
-import { ZodType, ZodTypeDef } from "zod";
 import { taskModel } from "../models/task";
 import { taskValidations } from "../validations/task";
 import { BaseService } from "./base";
@@ -11,6 +10,12 @@ import path from "path";
 import fs from "fs";
 import { documentModel } from "../models/documents";
 import { taskDocumentModel } from "../models/task_document";
+import { userModel } from "../models/user";
+import { validateUserEmailUseCase } from "../lib/mail";
+import { notificationModel } from "../models/notification";
+import { Documento, PedidoRevisao, Tarefa } from "@prisma/client";
+import { askRevisionModel } from "../models/ask_revision";
+import { reviewerModel } from "../models/reviewer";
 
 class TaskService extends BaseService {
   model = taskModel;
@@ -22,18 +27,21 @@ class TaskService extends BaseService {
       const data = req.body as { [key: string]: MultipartFile };
       const { fields, files } = await getFieldsAndFiles(data);
 
-      console.log(fields, files);
+      console.log(fields);
 
-      const { descricao, id_usuario, nome } =
+      const { descricao, id_usuario, nome, usuarios } =
         taskValidations.getData.parse(fields);
 
-      const task = await this.model.create({
+      console.log("Usuários", usuarios);
+
+      const task = (await this.model.create({
         descricao,
         id_usuario,
         nome,
-      });
+      })) as Tarefa;
 
-      for (const [key, file] of Object.entries(files['files[]'])) {
+      for (const [key, file] of Object.entries(files)) {
+        console.log(file.filename);
         const fileExtension = file.filename.split(".").pop()?.toLowerCase();
         console.log(fileExtension);
 
@@ -65,15 +73,53 @@ class TaskService extends BaseService {
             fileStream.end();
             const documentsFormate = {
               nome: file.filename,
-              descricao: null, // Converte o objeto em string JSON
+              descricao: JSON.stringify(fields), // Converte o objeto em string JSON
               caminho: filePath,
             };
-            const saveFile = await documentModel.create(documentsFormate);
+            const saveFile = (await documentModel.create(
+              documentsFormate
+            )) as Documento;
+
             const taskDocument = await taskDocumentModel.create({
-              id_tarefa: (task as { id: string }).id,
-              id_documento: (saveFile as {id: string}).id,
+              id_tarefa: task.id,
+              id_documento: saveFile.id,
+              id_usuario,
             });
-            console.log(saveFile);
+
+            const askReview = (await askRevisionModel.create({
+              id_tarefa_documentos: taskDocument.id,
+              id_usuario_solicitante: id_usuario,
+            })) as PedidoRevisao;
+
+            usuarios?.map(async (userId: { id: string }) => {
+              const user = await userModel.getById(userId.id);
+              if (!user) {
+                throw new Error("Usuário não encontrado");
+              }
+
+              const reviewer = await reviewerModel.create({
+                id_usuario: userId.id,
+                id_pedido_revisao: askReview.id,
+                data_aprovacao: null,
+                aprovado: false,
+                estado: "PENDENTE",
+              });
+
+              await validateUserEmailUseCase.run("REVISAO", user.email, {
+                userName: user.nome,
+                taskName: task.nome,
+                link: `${process.env.CROSS_ORIGIN}/tasks/${task.id}`,
+              });
+
+              await notificationModel.create({
+                id_usuario: userId.id,
+                titulo: "Pedido de revisão",
+                descricao: `Você foi solicitado para revisar a tarefa ${task.nome}`,
+                tipo: "REVISAO",
+                destino: "EXTERNO",
+              });
+              console.log("Usuário notificado");
+            });
           } else {
             console.log(`O arquivo ${file.filename} tem um tipo desconhecido.`);
           }
@@ -82,6 +128,26 @@ class TaskService extends BaseService {
         }
       }
       res.send(task);
+    } catch (error) {
+      ErrorsHandler.handle(error, res);
+    }
+  }
+
+  async getTasksByUser(req: FastifyRequest, res: FastifyReply) {
+    try {
+      const { id_usuario } = taskValidations.getUserId.parse(req.params);
+      const data = await this.model.getTasksByUser(id_usuario);
+      res.send(data);
+    } catch (error) {
+      ErrorsHandler.handle(error, res);
+    }
+  }
+
+  async getTasksToReview(req: FastifyRequest, res: FastifyReply) {
+    try {
+      const { id_usuario } = taskValidations.getUserId.parse(req.params);
+      const data = await this.model.getTasksToReview(id_usuario);
+      res.send(data);
     } catch (error) {
       ErrorsHandler.handle(error, res);
     }

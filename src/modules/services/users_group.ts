@@ -39,21 +39,23 @@ class UsersGroupsService extends BaseService {
 
         const token = req.jwt.sign(payload);
 
-        const url = `${req.protocol}://${req.hostname}`;
+        const url = `${process.env.CROSS_ORIGIN}`;
 
         await validateUserEmailUseCase.run("CONFIRMACAO", user?.email, {
+          userName:user.nome,
           groupName: group.nome,
           confirmationLink: `${url}/users_groups/confirmation?token=${token}`,
           link: url,
         });
 
-        await notificationModel.create({
+        const notificacao = await notificationModel.create({
           id_usuario,
           titulo: "Convite para grupo",
           descricao: `Você foi convidado para o grupo ${group.nome}`,
           tipo: "CONFIRMACAO",
           destino: "EXTERNO",
         });
+        console.log("Usuário", notificacao)
         return userGroup;
       });
 
