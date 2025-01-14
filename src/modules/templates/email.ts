@@ -292,7 +292,11 @@ export const emailOptions = {
         </head>
         <body>
           <div class="container">
-            <div class="header">📄 Revisão de Documentos</div>
+            <div class="header">
+              <p>
+                📄 Revisão de Documentos
+              </p>
+            </div>
             <div class="content">
               <p>Olá {{userName}},</p>
               <p>Você tem um ou mais documentos que precisam de sua revisão no processo {{taskName}}.</p>

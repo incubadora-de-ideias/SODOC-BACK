@@ -73,7 +73,7 @@ model Comentario {
 model PedidoRevisao {
   id                     String    @id @default(uuid())
   id_usuario_solicitante String
-  criado_em              DateTime? @default(now())
+  created_at              DateTime? @default(now())
   id_tarefa_documentos   String
 
   revisores         Revisor[]
@@ -139,7 +139,7 @@ model Notificacao {
   id         String             @id @default(uuid())
   id_usuario String
   titulo     String
-  descricao  String
+  descricao  String             @db.LongText
   data       DateTime?          @default(now())
   lida       Boolean?           @default(false)
   tipo       TipoNotificacao    @default(MENSAGEM)
