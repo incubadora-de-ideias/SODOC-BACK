@@ -105,20 +105,6 @@ class TaskService extends BaseService {
                 estado: "PENDENTE",
               });
 
-              await validateUserEmailUseCase.run("REVISAO", user.email, {
-                userName: user.nome,
-                taskName: task.nome,
-                link: `${process.env.CROSS_ORIGIN}/tasks/${task.id}`,
-              });
-
-              await notificationModel.create({
-                id_usuario: userId.id,
-                titulo: "Pedido de revisão",
-                descricao: `Você foi solicitado para revisar a tarefa ${task.nome}`,
-                tipo: "REVISAO",
-                destino: "EXTERNO",
-              });
-              console.log("Usuário notificado");
             });
           } else {
             console.log(`O arquivo ${file.filename} tem um tipo desconhecido.`);
@@ -127,6 +113,25 @@ class TaskService extends BaseService {
           console.log(`O arquivo ${file.filename} tem um tipo desconhecido.`);
         }
       }
+      usuarios?.map(async (userId: { id: string }) => {
+        const user = await userModel.getById(userId.id);
+        if (!user) {
+          throw new Error("Usuário não encontrado");
+        }
+        await validateUserEmailUseCase.run("REVISAO", user.email, {
+          userName: user.nome,
+          taskName: task.nome,
+          link: `${process.env.CROSS_ORIGIN}/tasks/${task.id}`,
+        });
+
+        await notificationModel.create({
+          id_usuario: userId.id,
+          titulo: "Pedido de revisão",
+          descricao: `Você foi solicitado para revisar a tarefa ${task.nome}`,
+          tipo: "REVISAO",
+          destino: "EXTERNO",
+        });
+      });
       res.send(task);
     } catch (error) {
       ErrorsHandler.handle(error, res);

@@ -1,10 +1,11 @@
 import { BaseModel } from "./base";
 import prisma from "../lib/prisma";
-import { Notificacao } from "@prisma/client";
+import { Notificacao, Prisma } from "@prisma/client";
 
 class NotificationModel extends BaseModel<Notificacao> {
   protected model = prisma.notificacao;
   protected include = {};
+  protected orderBy = {data: "asc" } as Prisma.NotificacaoOrderByWithRelationInput;
 
   async create(data: Omit<Notificacao, "id" | "data" | "lida">) {
     return this.model.create({
