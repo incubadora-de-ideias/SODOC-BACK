@@ -123,14 +123,6 @@ class TaskService extends BaseService {
           taskName: task.nome,
           link: `${process.env.CROSS_ORIGIN}/tasks/${task.id}`,
         });
-
-        await notificationModel.create({
-          id_usuario: userId.id,
-          titulo: "Pedido de revisão",
-          descricao: `Você foi solicitado para revisar a tarefa ${task.nome}`,
-          tipo: "REVISAO",
-          destino: "EXTERNO",
-        });
       });
       res.send(task);
     } catch (error) {
