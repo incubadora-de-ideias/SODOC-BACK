@@ -1,5 +1,5 @@
 import { Prisma, Tarefa } from "@prisma/client";
-import { BaseModel } from "./base";
+import { BaseModel, TBaseGetAllParams } from "./base";
 import prisma from "../lib/prisma";
 
 const taskIncludes = {
@@ -8,7 +8,6 @@ const taskIncludes = {
       documento: true,
     },
   },
-
 } as Prisma.TarefaInclude;
 
 class TaskModel extends BaseModel<Tarefa> {
@@ -21,6 +20,9 @@ class TaskModel extends BaseModel<Tarefa> {
         id_usuario,
       },
       include: this.include,
+      orderBy: {
+        created_at: "desc",
+      },
     });
   }
 
@@ -42,6 +44,9 @@ class TaskModel extends BaseModel<Tarefa> {
         },
       },
       include: this.include,
+      orderBy: {
+        created_at: "desc",
+      },
     });
   }
 }

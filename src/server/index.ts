@@ -1,22 +1,30 @@
-import fastify from 'fastify';
-import routes from "./routes"
-import jwt from '@fastify/jwt';
-import fastifyCookie from '@fastify/cookie';
-import cors from '@fastify/cors';
-import multipart  from '@fastify/multipart';
-import prisma from '@/modules/lib/prisma';
+import fastify from "fastify";
+import routes from "./routes";
+import jwt from "@fastify/jwt";
+import fastifyCookie from "@fastify/cookie";
+import cors from "@fastify/cors";
+import multipart from "@fastify/multipart";
+import prisma from "@/modules/lib/prisma";
+import fastifyStatic from "@fastify/static";
+import path from "path";
 
 const app = fastify({ logger: true });
 
 const port = Number(process.env.PORT) || 5000;
 
-app.get('/', async (request, reply) => {
+app.get("/", async (request, reply) => {
   await prisma.notificacao.deleteMany();
-  return { hello: 'world' };
+  return { hello: "world" };
 });
 
 const start = async () => {
   try {
+    console.log(path.join(process.cwd(), "uploads"));
+    await app.register(fastifyStatic, {
+      root: path.join(process.cwd(), "uploads"),
+      prefix: "/uploads/",
+    });
+
     app.register(jwt, {
       secret: process.env.JWT_SECRET || "secret",
       sign: {
@@ -40,7 +48,7 @@ const start = async () => {
     await app.register(multipart, {
       limits: {
         fieldNameSize: 1024 * 1024,
-        fieldSize: 1024 * 1024 * 20,  
+        fieldSize: 1024 * 1024 * 20,
         fields: 10000,
         fileSize: 1024 * 1024 * 20,
         files: 100,
@@ -49,13 +57,13 @@ const start = async () => {
       },
       attachFieldsToBody: true,
     });
-    await app.register(routes)
-   
+    await app.register(routes);
     await app.listen({ port, host: "0.0.0.0" });
+    
   } catch (err) {
     app.log.error(err);
     process.exit(1);
   }
-}
+};
 
 start();

@@ -16,6 +16,7 @@ import { notificationModel } from "../models/notification";
 import { Documento, PedidoRevisao, Tarefa } from "@prisma/client";
 import { askRevisionModel } from "../models/ask_revision";
 import { reviewerModel } from "../models/reviewer";
+import { paths } from "../lib/definitions/paths";
 
 class TaskService extends BaseService {
   model = taskModel;
@@ -42,7 +43,7 @@ class TaskService extends BaseService {
 
       for (const [key, file] of Object.entries(files)) {
         console.log(file.filename);
-        const fileExtension = file.filename.split(".").pop()?.toLowerCase();
+        const fileExtension = path.extname(file.filename).slice(1);
         console.log(fileExtension);
 
         if (
@@ -55,19 +56,16 @@ class TaskService extends BaseService {
                 fileDirectories[fileExtension as keyof typeof fileDirectories]
               }`
             );
-            const uploadDir = path.join(
-              __dirname,
-              `..`,
-              `uploads/${
-                fileDirectories[fileExtension as keyof typeof fileDirectories]
-              }`
-            );
-            console.log(uploadDir);
+            const fileCategory =
+              fileDirectories[fileExtension as keyof typeof fileDirectories];
+            const filePath = `${fileCategory}/${file.filename}`;
+
+            const uploadDir = path.join(paths.upload, fileCategory);
             if (!fs.existsSync(uploadDir)) {
               fs.mkdirSync(uploadDir, { recursive: true });
             }
-            const filePath = path.join(uploadDir, file.filename);
-            const fileStream = fs.createWriteStream(filePath);
+            const finalFilePath = path.join(uploadDir, file.filename);
+            const fileStream = fs.createWriteStream(finalFilePath);
             const fileBuffer = await file.toBuffer();
             fileStream.write(fileBuffer);
             fileStream.end();
@@ -104,7 +102,6 @@ class TaskService extends BaseService {
                 aprovado: false,
                 estado: "PENDENTE",
               });
-
             });
           } else {
             console.log(`O arquivo ${file.filename} tem um tipo desconhecido.`);
