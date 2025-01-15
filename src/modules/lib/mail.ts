@@ -1,3 +1,6 @@
+import { DestinoNotificacao } from "@prisma/client";
+import { notificationModel } from "../models/notification";
+import { userModel } from "../models/user";
 import { mailService } from "../services/mail";
 import { emailOptions } from "../templates/email";
 import { IMailService, TemplateVariables } from "../types/mail";

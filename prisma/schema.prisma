@@ -61,13 +61,11 @@ model AcessoDocumento {
 
 model Comentario {
   id         String   @id @default(uuid())
-  id_usuario String
   texto      String
-  criado_em  DateTime @default(now())
+  criado_em  DateTime? @default(now())
   id_revisor String
 
   revisor Revisor @relation(fields: [id_revisor], references: [id], onDelete: Cascade)
-  usuario Usuario @relation(fields: [id_usuario], references: [id], onDelete: Cascade)
 }
 
 model PedidoRevisao {
@@ -116,7 +114,6 @@ model Usuario {
   notificacoes       Notificacao[]
   grupos             Grupo[]
   tarefa             Tarefa[]
-  Comentario         Comentario[]
   PedidoRevisao      PedidoRevisao[]
   Revisor            Revisor[]
 }

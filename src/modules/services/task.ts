@@ -87,6 +87,7 @@ class TaskService extends BaseService {
             const askReview = (await askRevisionModel.create({
               id_tarefa_documentos: taskDocument.id,
               id_usuario_solicitante: id_usuario,
+              criado_em: new Date(),
             })) as PedidoRevisao;
 
             usuarios?.map(async (userId: { id: string }) => {
