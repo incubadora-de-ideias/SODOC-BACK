@@ -26,16 +26,21 @@ model Tarefa {
   created_at         DateTime?           @default(now())
   usuario            Usuario             @relation(fields: [id_usuario], references: [id], onDelete: Cascade)
   tarefas_documentos TarefasDocumentos[]
+
+  @@unique([nome, id_usuario])
 }
 
 model TarefasDocumentos {
-  id           String @id @default(uuid())
+  id           String    @id @default(uuid())
   id_tarefa    String
   id_documento String
+  created_at   DateTime? @default(now())
 
-  pedidos_revisao PedidoRevisao[]
-  tarefa          Tarefa          @relation(fields: [id_tarefa], references: [id], onDelete: Cascade)
-  documento       Documento       @relation(fields: [id_documento], references: [id], onDelete: Cascade)
+  tarefa    Tarefa    @relation(fields: [id_tarefa], references: [id], onDelete: Cascade)
+  documento Documento @relation(fields: [id_documento], references: [id], onDelete: Cascade)
+  revisores Revisor[]
+
+  @@unique([id_tarefa, id_documento])
 }
 
 model VersaoDocumento {
@@ -60,25 +65,12 @@ model AcessoDocumento {
 }
 
 model Comentario {
-  id         String   @id @default(uuid())
-  id_usuario String
+  id         String    @id @default(uuid())
   texto      String
-  criado_em  DateTime @default(now())
+  criado_em  DateTime? @default(now())
   id_revisor String
 
   revisor Revisor @relation(fields: [id_revisor], references: [id], onDelete: Cascade)
-  usuario Usuario @relation(fields: [id_usuario], references: [id], onDelete: Cascade)
-}
-
-model PedidoRevisao {
-  id                     String    @id @default(uuid())
-  id_usuario_solicitante String
-  created_at              DateTime? @default(now())
-  id_tarefa_documentos   String
-
-  revisores         Revisor[]
-  solicitante       Usuario            @relation(fields: [id_usuario_solicitante], references: [id], onDelete: Cascade)
-  TarefasDocumentos TarefasDocumentos? @relation(fields: [id_tarefa_documentos], references: [id], onDelete: Cascade)
 }
 
 model Grupo {
@@ -116,23 +108,23 @@ model Usuario {
   notificacoes       Notificacao[]
   grupos             Grupo[]
   tarefa             Tarefa[]
-  Comentario         Comentario[]
-  PedidoRevisao      PedidoRevisao[]
   Revisor            Revisor[]
 }
 
 model Revisor {
-  id                String        @id @default(uuid())
-  id_usuario        String
-  id_pedido_revisao String
-  data_aprovacao    DateTime?
-  estado            EstadoRevisao @default(PENDENTE)
-  aprovado          Boolean       @default(false)
+  id                  String        @id @default(uuid())
+  id_usuario          String
+  id_tarefa_documento String
+  data_aprovacao      DateTime?
+  estado              EstadoRevisao @default(PENDENTE)
+  aprovado            Boolean       @default(false)
 
   comentarios Comentario[]
 
-  usuario        Usuario       @relation(fields: [id_usuario], references: [id], onDelete: Cascade)
-  pedido_revisao PedidoRevisao @relation(fields: [id_pedido_revisao], references: [id], onDelete: Cascade)
+  usuario          Usuario           @relation(fields: [id_usuario], references: [id], onDelete: Cascade)
+  tarefa_documento TarefasDocumentos @relation(fields: [id_tarefa_documento], references: [id], onDelete: Cascade)
+
+  @@unique([id_usuario, id_tarefa_documento])
 }
 
 model Notificacao {

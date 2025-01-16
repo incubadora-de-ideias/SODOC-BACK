@@ -13,10 +13,14 @@ import { taskDocumentModel } from "../models/task_document";
 import { userModel } from "../models/user";
 import { validateUserEmailUseCase } from "../lib/mail";
 import { notificationModel } from "../models/notification";
-import { Documento, PedidoRevisao, Tarefa } from "@prisma/client";
-import { askRevisionModel } from "../models/ask_revision";
+import {
+  Documento,
+  Tarefa,
+  TarefasDocumentos,
+} from "@prisma/client";
 import { reviewerModel } from "../models/reviewer";
 import { paths } from "../lib/definitions/paths";
+import { ParamsValidations } from "../validations/params";
 
 class TaskService extends BaseService {
   model = taskModel;
@@ -28,12 +32,8 @@ class TaskService extends BaseService {
       const data = req.body as { [key: string]: MultipartFile };
       const { fields, files } = await getFieldsAndFiles(data);
 
-      console.log(fields);
-
       const { descricao, id_usuario, nome, usuarios } =
         taskValidations.getData.parse(fields);
-
-      console.log("Usuários", usuarios);
 
       const task = (await this.model.create({
         descricao,
@@ -42,86 +42,81 @@ class TaskService extends BaseService {
       })) as Tarefa;
 
       for (const [key, file] of Object.entries(files)) {
-        console.log(file.filename);
         const fileExtension = path.extname(file.filename).slice(1);
-        console.log(fileExtension);
 
         if (
           fileExtension &&
           fileDirectories[fileExtension as keyof typeof fileDirectories]
         ) {
-          if (fileExtension in fileDirectories) {
-            console.log(
-              `O arquivo ${file.filename} é do tipo: ${
-                fileDirectories[fileExtension as keyof typeof fileDirectories]
-              }`
-            );
-            const fileCategory =
-              fileDirectories[fileExtension as keyof typeof fileDirectories];
-            const filePath = `${fileCategory}/${file.filename}`;
+          const fileCategory =
+            fileDirectories[fileExtension as keyof typeof fileDirectories];
+          const filePath = `${fileCategory}/${file.filename}`;
 
-            const uploadDir = path.join(paths.upload, fileCategory);
-            if (!fs.existsSync(uploadDir)) {
-              fs.mkdirSync(uploadDir, { recursive: true });
-            }
-            const finalFilePath = path.join(uploadDir, file.filename);
-            const fileStream = fs.createWriteStream(finalFilePath);
-            const fileBuffer = await file.toBuffer();
-            fileStream.write(fileBuffer);
-            fileStream.end();
-            const documentsFormate = {
-              nome: file.filename,
-              descricao: JSON.stringify(fields), // Converte o objeto em string JSON
-              caminho: filePath,
-            };
-            const saveFile = (await documentModel.create(
-              documentsFormate
-            )) as Documento;
-
-            const taskDocument = await taskDocumentModel.create({
-              id_tarefa: task.id,
-              id_documento: saveFile.id,
-              id_usuario,
-            });
-
-            const askReview = (await askRevisionModel.create({
-              id_tarefa_documentos: taskDocument.id,
-              id_usuario_solicitante: id_usuario,
-            })) as PedidoRevisao;
-
-            usuarios?.map(async (userId: { id: string }) => {
-              const user = await userModel.getById(userId.id);
-              if (!user) {
-                throw new Error("Usuário não encontrado");
-              }
-
-              const reviewer = await reviewerModel.create({
-                id_usuario: userId.id,
-                id_pedido_revisao: askReview.id,
-                data_aprovacao: null,
-                aprovado: false,
-                estado: "PENDENTE",
-              });
-            });
-          } else {
-            console.log(`O arquivo ${file.filename} tem um tipo desconhecido.`);
+          const uploadDir = path.join(paths.upload, fileCategory);
+          if (!fs.existsSync(uploadDir)) {
+            fs.mkdirSync(uploadDir, { recursive: true });
           }
-        } else {
-          console.log(`O arquivo ${file.filename} tem um tipo desconhecido.`);
+
+          const finalFilePath = path.join(uploadDir, file.filename);
+          await fs.promises.writeFile(finalFilePath, await file.toBuffer());
+
+          const document = (await documentModel.create({
+            nome: file.filename,
+            descricao: JSON.stringify(fields),
+            caminho: filePath,
+          })) as Documento;
+
+          const taskDocument = (await taskDocumentModel.create({
+            id_tarefa: task.id,
+            id_documento: document.id,
+          })) as TarefasDocumentos;
+
+          if (usuarios.length > 0) {
+            await Promise.all(
+              usuarios.map(async (userId: { id: string }) => {
+                await reviewerModel.create({
+                  id_usuario: userId.id,
+                  id_tarefa_documento: taskDocument.id,
+                  data_aprovacao: null,
+                  aprovado: false,
+                  estado: "PENDENTE",
+                });
+              })
+            );
+          } else {
+            console.warn(`Revisores não encontrados para ${file.filename}`);
+          }
         }
       }
-      usuarios?.map(async (userId: { id: string }) => {
-        const user = await userModel.getById(userId.id);
-        if (!user) {
-          throw new Error("Usuário não encontrado");
-        }
-        await validateUserEmailUseCase.run("REVISAO", user.email, {
-          userName: user.nome,
-          taskName: task.nome,
-          link: `${process.env.CROSS_ORIGIN}/tasks/${task.id}`,
-        });
-      });
+
+      // Enviar um único e-mail consolidado para cada revisor
+      await Promise.all(
+        usuarios.map(async (userId: { id: string }) => {
+          const user = await userModel.getById(userId.id);
+          if (user) {
+            await validateUserEmailUseCase.run("REVISAO", user.email, {
+              userName: user.nome,
+              taskName: task.nome,
+              link: `${process.env.CROSS_ORIGIN}/tarefas/${task.id}`,
+            });
+          } else {
+            console.warn(`Usuário não encontrado: ${userId.id}`);
+          }
+        })
+      );
+
       res.send(task);
+    } catch (error) {
+      ErrorsHandler.handle(error, res);
+    }
+  }
+
+  async getTasksByUserAndId(req: FastifyRequest, res: FastifyReply) {
+    try {
+      const { id_usuario } = taskValidations.getUserId.parse(req.params);
+      const { id } = ParamsValidations.getId.parse(req.params);
+      const data = await this.model.getTasksByUserAndId(id, id_usuario);
+      res.send(data);
     } catch (error) {
       ErrorsHandler.handle(error, res);
     }

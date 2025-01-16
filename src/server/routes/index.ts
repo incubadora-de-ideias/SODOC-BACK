@@ -11,6 +11,7 @@ import { usersGroups } from "./users_group.routes";
 import { tasks } from "./task.routes";
 import { reviewers } from "./reviewer.routes";
 import { usersGroupsService } from "@/modules/services/users_group";
+import { comments } from "./comment.routes";
 
 export default async function routes(app: FastifyInstance) {
   app.post("/login", authService.login);
@@ -27,5 +28,6 @@ export default async function routes(app: FastifyInstance) {
     await usersGroups(privateRoute);
     await tasks(privateRoute);
     await reviewers(privateRoute);
+    await comments(privateRoute);
   });
 }

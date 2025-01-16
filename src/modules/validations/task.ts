@@ -39,6 +39,7 @@ class TaskValidation {
   getUserId = z.object({
     id_usuario: nonEmptyString(),
   });
+
 }
 
 export const taskValidations = new TaskValidation();

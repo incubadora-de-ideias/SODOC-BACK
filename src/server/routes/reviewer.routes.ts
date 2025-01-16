@@ -4,4 +4,9 @@ import { reviewerService } from "@/modules/services/reviewer";
 
 export async function reviewers(app: FastifyInstance) {
   await BaseRoute.handle(app, reviewerService, "reviewers");
+
+  app.put(
+    "/reviewers/update_all_states/:id_usuario/:id_tarefa",
+    reviewerService.updateAllStates.bind(reviewerService)
+  );
 }
