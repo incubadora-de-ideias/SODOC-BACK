@@ -8,10 +8,10 @@ class ReviewerValidation {
     data_aprovacao: z.coerce.string(),
   });
 
-  getDataToUpdate = this.getData.partial().extend({
+  getDataToUpdate = this.getData.extend({
     estado: z.enum(["PENDENTE", "EM_ANDAMENTO", "CONCLUIDO"]),
     aprovado: z.boolean(),
-  });
+  }).partial();
 
   getDataToUpdateAllStates = z.object({
     id_usuario: nonEmptyString(),

@@ -22,6 +22,7 @@ const taskIncludes = {
       },
     },
   },
+  usuario: true,
 } as Prisma.TarefaInclude;
 
 class TaskModel extends BaseModel<Tarefa> {
