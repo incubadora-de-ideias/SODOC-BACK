@@ -6,6 +6,7 @@ const taskIncludes = {
   tarefas_documentos: {
     include: {
       documento: true,
+      revisores: true
     },
   },
 } as Prisma.TarefaInclude;
@@ -31,13 +32,9 @@ class TaskModel extends BaseModel<Tarefa> {
       where: {
         tarefas_documentos: {
           some: {
-            pedidos_revisao: {
+            revisores: {
               some: {
-                revisores: {
-                  some: {
-                    id_usuario,
-                  },
-                },
+                id_usuario,
               },
             },
           },

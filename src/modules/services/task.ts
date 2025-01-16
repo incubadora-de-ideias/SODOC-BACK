@@ -12,9 +12,7 @@ import { documentModel } from "../models/documents";
 import { taskDocumentModel } from "../models/task_document";
 import { userModel } from "../models/user";
 import { validateUserEmailUseCase } from "../lib/mail";
-import { notificationModel } from "../models/notification";
-import { Documento, PedidoRevisao, Tarefa } from "@prisma/client";
-import { askRevisionModel } from "../models/ask_revision";
+import { Documento, Tarefa, TarefasDocumentos } from "@prisma/client";
 import { reviewerModel } from "../models/reviewer";
 import { paths } from "../lib/definitions/paths";
 
@@ -81,13 +79,7 @@ class TaskService extends BaseService {
             const taskDocument = await taskDocumentModel.create({
               id_tarefa: task.id,
               id_documento: saveFile.id,
-              id_usuario,
-            });
-
-            const askReview = (await askRevisionModel.create({
-              id_tarefa_documentos: taskDocument.id,
-              id_usuario_solicitante: id_usuario,
-            })) as PedidoRevisao;
+            }) as TarefasDocumentos;
 
             usuarios?.map(async (userId: { id: string }) => {
               const user = await userModel.getById(userId.id);
@@ -97,7 +89,7 @@ class TaskService extends BaseService {
 
               const reviewer = await reviewerModel.create({
                 id_usuario: userId.id,
-                id_pedido_revisao: askReview.id,
+                id_tarefa_documento: taskDocument.id,
                 data_aprovacao: null,
                 aprovado: false,
                 estado: "PENDENTE",
