@@ -18,6 +18,7 @@ export class MailService implements IMailService {
           user: process.env.EMAIL,
           pass: process.env.EMAIL_PASSWORD,
         },
+
       });
 
       const html = renderTemplate(type, variables);
@@ -31,6 +32,7 @@ export class MailService implements IMailService {
       try {
         await transporter.sendMail(mailOptions);
       } catch (error) {
+        console.log(error);
         throw new Error(`${error}`);
       }
     } else {

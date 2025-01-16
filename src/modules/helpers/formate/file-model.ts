@@ -6,5 +6,6 @@ export const fileDirectories = {
   csv: "EXCEL",
   pdf: "PDF",
   docx: "WORD",
+  doc: "WORD",
   jpeg: "IMAGEM",
 };
